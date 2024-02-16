@@ -70,8 +70,12 @@ func NewQueue(queueID uint16) (q *Queue, err error) {
 	}
 
 	if err = q.create(queueID); err != nil {
+		fmt.Printf("failed to create queue %v error: %v\n", queueID, err)
 		return nil, err
-	} else if err = q.setup(); err != nil {
+	}
+
+	if err = q.setup(); err != nil {
+		fmt.Printf("failed to setup queue %v error: %v\n", queueID, err)
 		return nil, err
 	}
 

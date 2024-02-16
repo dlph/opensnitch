@@ -56,9 +56,11 @@ func (c *Client) loadDiskConfiguration(reload bool) {
 	}
 
 	if ok := c.loadConfiguration(raw); ok {
-		if err := c.configWatcher.Add(configFile); err != nil {
-			log.Error("Could not watch path: %s", err)
-			return
+		if c.configWatcher != nil {
+			if err := c.configWatcher.Add(configFile); err != nil {
+				log.Error("Could not watch path: %s", err)
+				return
+			}
 		}
 	}
 

@@ -169,11 +169,34 @@ func KillSockets(fam, proto uint8, excludeLocal bool) error {
 	}
 
 	for _, sock := range sockListTCP {
-		if excludeLocal && (isPrivate(sock.ID.Destination) ||
-			sock.ID.Source.IsUnspecified() ||
-			sock.ID.Destination.IsUnspecified()) {
-			continue
+		if excludeLocal {
+			// debugger (DST) uses loopback
+			if sock.ID.Source.IsLoopback() {
+				fmt.Printf("source loopback - not killing socket: src: %s dst: %s\n", sock.ID.Source.String(), sock.ID.Destination.String())
+				continue
+			}
+
+			if sock.ID.Destination.IsLoopback() {
+				fmt.Printf("destination loopback - not killing socket: src: %s dst: %s\n", sock.ID.Source.String(), sock.ID.Destination.String())
+				continue
+			}
+
+			if isPrivate(sock.ID.Destination) {
+				fmt.Printf("destination private - not killing socket: src: %s dst: %s\n", sock.ID.Source.String(), sock.ID.Destination.String())
+				continue
+			}
+
+			if sock.ID.Source.IsUnspecified() {
+				fmt.Printf("source unspecified - not killing socket: src: %s dst: %s\n", sock.ID.Source.String(), sock.ID.Destination.String())
+				continue
+			}
+			if sock.ID.Destination.IsUnspecified() {
+				fmt.Printf("destination unspecified - not killing socket: src: %s dst: %s\n", sock.ID.Source.String(), sock.ID.Destination.String())
+				continue
+			}
 		}
+
+		fmt.Printf("killing socket: src: %s dst: %s\n", sock.ID.Source.String(), sock.ID.Destination.String())
 		if err := SocketKill(fam, proto, sock.ID); err != nil {
 			log.Debug("Unable to kill socket (%+v): %s", sock.ID, err)
 		}
