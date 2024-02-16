@@ -62,7 +62,7 @@ type Client struct {
 }
 
 // NewClient creates and configures a new client.
-func NewClient(socketPath, localConfigFile string, stats *statistics.Statistics, rules *rule.Loader, loggers *loggers.LoggerManager) *Client {
+func NewClient(socketPath, localConfigFile string, stats *statistics.Statistics, rules *rule.Loader, loggers *loggers.LoggerManager) (*Client, error) {
 	if localConfigFile != "" {
 		configFile = localConfigFile
 	}
@@ -79,9 +79,12 @@ func NewClient(socketPath, localConfigFile string, stats *statistics.Statistics,
 
 	c.clientCtx, c.clientCancel = context.WithCancel(context.Background())
 
-	if watcher, err := fsnotify.NewWatcher(); err == nil {
-		c.configWatcher = watcher
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return nil, err
 	}
+	c.configWatcher = watcher
+
 	c.loadDiskConfiguration(false)
 	if socketPath != "" {
 		c.setSocketPath(c.getSocketPath(socketPath))
@@ -92,7 +95,7 @@ func NewClient(socketPath, localConfigFile string, stats *statistics.Statistics,
 	stats.SetLimits(clientConfig.Stats)
 	stats.SetLoggers(loggers)
 
-	return c
+	return c, nil
 }
 
 // Connect starts the connection poller
@@ -162,14 +165,14 @@ func (c *Client) Connected() bool {
 	return true
 }
 
-//GetIsAsking returns the isAsking flag
+// GetIsAsking returns the isAsking flag
 func (c *Client) GetIsAsking() bool {
 	c.RLock()
 	defer c.RUnlock()
 	return c.isAsking
 }
 
-//SetIsAsking sets the isAsking flag
+// SetIsAsking sets the isAsking flag
 func (c *Client) SetIsAsking(flag bool) {
 	c.Lock()
 	defer c.Unlock()
@@ -364,6 +367,10 @@ func (c *Client) PostAlert(atype protocol.Alert_Type, awhat protocol.Alert_What,
 }
 
 func (c *Client) monitorConfigWorker() {
+	if c.configWatcher == nil {
+		return
+	}
+
 	for {
 		select {
 		case event := <-c.configWatcher.Events:

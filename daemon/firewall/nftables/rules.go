@@ -92,6 +92,7 @@ func (n *Nft) QueueConnections(enable bool, logError bool) (error, error) {
 		return nil, fmt.Errorf("QueueConnections() Error getting outputChain: output-%s", table.Name)
 	}
 
+	// meta l4proto != tcp ct state related,new queue flags bypass to 0
 	n.Conn.AddRule(&nftables.Rule{
 		Position: 0,
 		Table:    table,

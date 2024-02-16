@@ -24,6 +24,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -131,19 +132,20 @@ func init() {
 // This configuration will be loaded again by uiClient(), in order to monitor it for changes.
 func loadDiskConfiguration() (*config.Config, error) {
 	if configFile == "" {
-		return nil, fmt.Errorf("Configuration file cannot be empty")
-	}
-
-	raw, err := config.Load(configFile)
-	if err != nil || len(raw) == 0 {
-		return nil, fmt.Errorf("Error loading configuration %s: %s", configFile, err)
-	}
-	clientConfig, err := config.Parse(raw)
-	if err != nil {
-		return nil, fmt.Errorf("Error parsing configuration %s: %s", configFile, err)
+		return nil, errors.New("configuration file cannot be empty")
 	}
 
 	log.Info("Loading configuration file %s ...", configFile)
+
+	raw, err := config.Load(configFile)
+	if err != nil || len(raw) == 0 {
+		return nil, fmt.Errorf("failed loading configuration %s: %v", configFile, err)
+	}
+	clientConfig, err := config.Parse(raw)
+	if err != nil {
+		return nil, fmt.Errorf("failed parsing configuration %s: %v", configFile, err)
+	}
+
 	return &clientConfig, nil
 }
 
@@ -159,7 +161,8 @@ func setupQueues() {
 		msg := fmt.Sprintf("Error creating queue #%d: %s", queueNum, err)
 		uiClient.SendWarningAlert(msg)
 		log.Warning("Is opensnitchd already running?")
-		log.Fatal(msg)
+		// log.Fatal(msg)
+		return
 	}
 	pktChan = queue.Packets()
 
@@ -538,18 +541,25 @@ func acceptOrDeny(packet *netfilter.Packet, con *conman.Connection) *rule.Rule {
 }
 
 func main() {
-	ctx, cancel = context.WithCancel(context.Background())
-	defer cancel()
 	flag.Parse()
 
 	if showVersion {
 		fmt.Println(core.Version)
-		os.Exit(0)
+		return
 	}
 	if checkRequirements {
 		core.CheckSysRequirements()
-		os.Exit(0)
+		return
 	}
+
+	if err := mainE(); err != nil {
+		log.Fatal("%v", err)
+	}
+}
+
+func mainE() error {
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
 
 	setupLogging()
 	setupProfiling()
@@ -558,19 +568,19 @@ func main() {
 
 	cfg, err := loadDiskConfiguration()
 	if err != nil {
-		log.Fatal("%s", err)
+		return err
 	}
 
 	if err == nil && cfg.Rules.Path != "" {
 		rulesPath = cfg.Rules.Path
 	}
 	if rulesPath == "" {
-		log.Fatal("rules path cannot be empty")
+		return fmt.Errorf("rules path cannot be empty")
 	}
 
 	rulesPath, err := core.ExpandPath(rulesPath)
 	if err != nil {
-		log.Fatal("Error accessing rules path (does it exist?): %s", err)
+		return fmt.Errorf("Error accessing rules path (does it exist?): %s", err)
 	}
 
 	setupSignals()
@@ -578,13 +588,18 @@ func main() {
 	log.Info("Loading rules from %s ...", rulesPath)
 	rules, err = rule.NewLoader(!noLiveReload)
 	if err != nil {
-		log.Fatal("%s", err)
-	} else if err = rules.Load(rulesPath); err != nil {
-		log.Fatal("%s", err)
+		return err
+	}
+
+	if err = rules.Load(rulesPath); err != nil {
+		return err
 	}
 	stats = statistics.New(rules)
 	loggerMgr = loggers.NewLoggerManager()
-	uiClient = ui.NewClient(uiSocket, configFile, stats, rules, loggerMgr)
+	uiClient, err = ui.NewClient(uiSocket, configFile, stats, rules, loggerMgr)
+	if err != nil {
+		return err
+	}
 
 	setupWorkers()
 	setupQueues()
@@ -652,5 +667,6 @@ func main() {
 Exit:
 	close(wrkChan)
 	doCleanup(queue, repeatQueue)
-	os.Exit(0)
+
+	return nil
 }
