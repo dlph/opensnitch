@@ -8,7 +8,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/evilsocket/opensnitch/service"
+	"github.com/dlph/opensnitch/build"
+	"github.com/dlph/opensnitch/service"
 
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -17,9 +18,9 @@ import (
 var rootCmd = &cobra.Command{
 	Use:     "",
 	Short:   "run daemon",
-	Long:    ``,
+	Long:    `run daemon`,
 	RunE:    runRootE,
-	Version: "0.0.1-beta",
+	Version: build.Version(),
 }
 
 func runRootE(cmd *cobra.Command, args []string) error {

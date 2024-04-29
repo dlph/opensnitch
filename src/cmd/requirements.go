@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"github.com/dlph/opensnitch/build"
+
 	"github.com/evilsocket/opensnitch/daemon/core"
 	"github.com/spf13/cobra"
 )
@@ -12,5 +14,5 @@ var requirementsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		core.CheckSysRequirements()
 	},
-	Version: "0.0.1-beta",
+	Version: build.Version(),
 }

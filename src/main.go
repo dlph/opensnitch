@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/evilsocket/opensnitch/cmd"
+	"github.com/dlph/opensnitch/cmd"
 )
 
 func main() {
