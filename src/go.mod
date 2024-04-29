@@ -1,4 +1,4 @@
-module github.com/evilsocket/opensnitch
+module github.com/dlph/opensnitch
 
 go 1.21.1
 
@@ -7,15 +7,19 @@ replace github.com/evilsocket/opensnitch/daemon/ui/protocol => ../daemon/ui/prot
 require (
 	github.com/evilsocket/opensnitch/daemon v0.0.0-20240211104149-2ec37ed5939c
 	github.com/evilsocket/opensnitch/daemon/ui/protocol v0.0.0-00010101000000-000000000000
+	github.com/fsnotify/fsnotify v1.7.0
+	github.com/iovisor/gobpf v0.2.0
+	github.com/matryer/is v1.4.1
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
+	go.starlark.net v0.0.0-20240411212711-9b43f0afd521
 	go.uber.org/zap v1.27.0
+	golang.org/x/sync v0.7.0
 )
 
 require (
 	github.com/BurntSushi/toml v0.4.1 // indirect
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
@@ -23,7 +27,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/iovisor/gobpf v0.2.0 // indirect
 	github.com/josharian/native v0.0.0-20200817173448-b6b71def0850 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mdlayher/netlink v1.4.2 // indirect
@@ -43,7 +46,6 @@ require (
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
